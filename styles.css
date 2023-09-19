@@ -6,3 +6,10 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.another-name {
+    font-size: calc(var(--font-text-size) - 5px);
+    color: var(--text-muted);
+    margin-top: 0;
+    margin-bottom: var(--inline-title-margin-bottom);
+}
