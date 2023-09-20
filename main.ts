@@ -16,18 +16,31 @@ export default class AnotherNamePlugin extends Plugin {
 
 	async initReloadFunction() {
 		this.loadSettings();
-		this.reloadForFile = (file: TFile, cache: CachedMetadata, leaf?: WorkspaceLeaf) => {
+		this.reloadForFile = async (file: TFile, cache: CachedMetadata, leaf?: WorkspaceLeaf) => {
 			const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			let viewContentEl = leaf?.view?.contentEl;
+			let viewContentEl = leaf?.view?.contentEl as HTMLElement;
 			if (!viewContentEl)
-				viewContentEl = mdView?.contentEl;
+				viewContentEl = mdView?.contentEl as HTMLElement;
 
 			let inlineTitle = leaf?.view.inlineTitleEl;
 			if (!inlineTitle)
 				inlineTitle = mdView?.inlineTitleEl;
 
 			// remove old element if exists
-			const anotherNameElOld = viewContentEl?.querySelector('.another-name');
+			console.log("viewContentEl", viewContentEl);
+			
+			// wait for the element to be rendered. At least it works!
+			let time = 0;
+			while (time < 100) {
+				await sleep(10);
+				time += 10;
+				if (viewContentEl.querySelector(".another-name")) {
+					break;
+				}
+			}
+			
+			const anotherNameElOld = viewContentEl.querySelector(".another-name");
+			console.log("anotherNameElOld", anotherNameElOld);
 			if (anotherNameElOld) {
 				anotherNameElOld.remove();
 				// anotherNameElOld.forEach((el: HTMLElement) => {
@@ -70,6 +83,8 @@ export default class AnotherNamePlugin extends Plugin {
 				if (!file) return;
 				const cache = this.app.metadataCache.getFileCache(file);
 				if (cache) {
+					console.log("reloadAllVisible");
+					console.log(file, cache, leaf);
 					this.reloadForFile(file, cache, leaf);
 				}
 			});
@@ -87,24 +102,27 @@ export default class AnotherNamePlugin extends Plugin {
 
 		let leaves = this.app.workspace.getLeavesOfType('markdown');
 
-		this.registerEvent(this.app.workspace.on('file-open', (file: TFile) => {
-			if (file) {
-				const cache = this.app.metadataCache.getFileCache(file);
-				if (cache) {
-					this.reloadForFile(file, cache);
-				}
-			}
+		// this.registerEvent(this.app.workspace.on('file-open', (file: TFile) => {
+		// 	if (file) {
+		// 		const cache = this.app.metadataCache.getFileCache(file);
+		// 		if (cache) {
+		// 			console.log("file-open")
+		// 			this.reloadForFile(file, cache);
+		// 		}
+		// 	}
 
-		}));
+		// }));
 
 		this.registerEvent(this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
 			if (file) {
+				console.log("changed")
 				this.reloadForFile(file, cache);
 			}
 		}));
 
 		this.registerEvent(this.app.workspace.on('layout-change', () => {
 			// NOTE: I don't know how to make it better. At least it works!
+			console.log("layout-change");
 			this.reloadAllVisible();
 		}));
 
