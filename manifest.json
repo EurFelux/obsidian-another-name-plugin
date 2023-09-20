@@ -1,7 +1,7 @@
 {
 	"id": "another-name-plugin",
 	"name": "Another name",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Add a another name for your file!",
 	"author": "Wang Jiyuan",
