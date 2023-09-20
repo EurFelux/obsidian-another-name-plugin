@@ -6,7 +6,7 @@ interface AnotherNameSettings {
 }
 
 const DEFAULT_SETTINGS: AnotherNameSettings = {
-	propertyName: 'another name'
+	propertyName: 'another-name'
 }
 
 export default class AnotherNamePlugin extends Plugin {
@@ -26,9 +26,7 @@ export default class AnotherNamePlugin extends Plugin {
 			if (!inlineTitle)
 				inlineTitle = mdView?.inlineTitleEl;
 
-			// console.log('reloadForFile', file, cache, mdView, inlineTitle);
-			// console.log('viewContentEl', viewContentEl);
-			// 检查是否有旧的元素
+			// remove old element if exists
 			const anotherNameElOld = viewContentEl?.querySelector('.another-name');
 			if (anotherNameElOld) {
 				anotherNameElOld.remove();
@@ -39,29 +37,25 @@ export default class AnotherNamePlugin extends Plugin {
 
 			if (!inlineTitle) return;
 
-			// 读取元数据
+			// read frontmatter
 			const frontmatter = cache?.frontmatter;
-			// console.log('frontmatter', frontmatter);
 
 			let anotherName;
 			if (frontmatter) {
 				anotherName = frontmatter[this.settings.propertyName]
 				if (!anotherName)
 					return;
-				// console.log(anotherName);
 			} else {
-				// console.log('no frontmatter')
 				return;
 			}
 
-			// 构造HTML元素
+			// create element
 			const anotherNameEl = document.createElement('div');
 			anotherNameEl.innerText = anotherName;
 			anotherNameEl.classList.add('another-name');
 
-			// 插入
+			// insert element
 			if (inlineTitle) {
-				// console.log('inlineTitle', inlineTitle);
 				inlineTitle.style.marginBottom = "0px";
 				inlineTitle.parentNode?.insertBefore(anotherNameEl, inlineTitle.nextSibling);
 			}
@@ -70,10 +64,7 @@ export default class AnotherNamePlugin extends Plugin {
 
 		this.reloadAllVisible = () => {
 			this.app.workspace.iterateRootLeaves(leaf => {
-				// console.log("It works.")
 				const display = leaf.containerEl.style.display;
-				// console.log("leaf", leaf)
-				// console.log("display", display)
 				if (display === "none") return;
 				const file = leaf.view.file;
 				if (!file) return;
@@ -94,13 +85,8 @@ export default class AnotherNamePlugin extends Plugin {
 
 		this.initReloadFunction();
 
-		// this.app.workspace.onLayoutReady(() => {
-		// 	this.reloadAllVisible();
-		// });
-
 		let leaves = this.app.workspace.getLeavesOfType('markdown');
 
-		// add something!
 		this.registerEvent(this.app.workspace.on('file-open', (file: TFile) => {
 			if (file) {
 				const cache = this.app.metadataCache.getFileCache(file);
@@ -112,15 +98,13 @@ export default class AnotherNamePlugin extends Plugin {
 		}));
 
 		this.registerEvent(this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
-			// console.log('changed', file, data, cache);
 			if (file) {
 				this.reloadForFile(file, cache);
 			}
 		}));
 
 		this.registerEvent(this.app.workspace.on('layout-change', () => {
-			// 这样效率很低，但是我没有更好的办法
-			// console.log('trigger layout-change')
+			// NOTE: I don't know how to make it better. At least it works!
 			this.reloadAllVisible();
 		}));
 
@@ -169,7 +153,7 @@ class AnotherNameSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Property name')
-			.setDesc('wait a while to take effect')
+			.setDesc('After changing this setting, it would not update instantly. Try to do something to trigger the update.')
 			.addText(text => text
 				.setPlaceholder('another name')
 				.setValue(this.plugin.settings.propertyName)
