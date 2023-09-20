@@ -27,20 +27,23 @@ export default class AnotherNamePlugin extends Plugin {
 				inlineTitle = mdView?.inlineTitleEl;
 
 			// remove old element if exists
-			console.log("viewContentEl", viewContentEl);
+			// console.log("viewContentEl", viewContentEl);
 			
-			// wait for the element to be rendered. At least it works!
+			// wait a while for the element to be rendered. At least it works!
 			let time = 0;
 			while (time < 100) {
+				const startTime = Date.now();
 				await sleep(10);
-				time += 10;
 				if (viewContentEl.querySelector(".another-name")) {
 					break;
 				}
+				const endTime = Date.now();
+				time += endTime - startTime;
+				// console.log(time);
 			}
 			
 			const anotherNameElOld = viewContentEl.querySelector(".another-name");
-			console.log("anotherNameElOld", anotherNameElOld);
+			// console.log("anotherNameElOld", anotherNameElOld);
 			if (anotherNameElOld) {
 				anotherNameElOld.remove();
 				// anotherNameElOld.forEach((el: HTMLElement) => {
@@ -83,8 +86,8 @@ export default class AnotherNamePlugin extends Plugin {
 				if (!file) return;
 				const cache = this.app.metadataCache.getFileCache(file);
 				if (cache) {
-					console.log("reloadAllVisible");
-					console.log(file, cache, leaf);
+					// console.log("reloadAllVisible");
+					// console.log(file, cache, leaf);
 					this.reloadForFile(file, cache, leaf);
 				}
 			});
@@ -115,25 +118,25 @@ export default class AnotherNamePlugin extends Plugin {
 
 		this.registerEvent(this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
 			if (file) {
-				console.log("changed")
+				// console.log("changed")
 				this.reloadForFile(file, cache);
 			}
 		}));
 
 		this.registerEvent(this.app.workspace.on('layout-change', () => {
 			// NOTE: I don't know how to make it better. At least it works!
-			console.log("layout-change");
+			// console.log("layout-change");
 			this.reloadAllVisible();
 		}));
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			// console.log('click', evt);
-		});
+		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+		// 	// console.log('click', evt);
+		// });
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
 	}
 
