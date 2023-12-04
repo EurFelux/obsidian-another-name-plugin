@@ -8,7 +8,7 @@ If your plugin does not need CSS, delete this file.
 */
 
 .another-name {
-    font-size: calc(var(--font-text-size) - 5px);
+    font-size: calc(var(--inline-title-size) * 0.24);
     color: var(--text-muted);
     margin-top: 0;
     margin-bottom: var(--inline-title-margin-bottom);
