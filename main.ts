@@ -1,188 +1,183 @@
-import { App, Editor, MarkdownView, Events, EventRef, Plugin, PluginSettingTab, Setting, TFile, CachedMetadata, MarkdownPostProcessorContext, WorkspaceLeaf } from 'obsidian';
+import {
+  App,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+  WorkspaceLeaf,
+  FileView,
+  Notice,
+} from "obsidian";
 // Remember to rename these classes and interfaces!
 
 interface AnotherNameSettings {
-	propertyName: string;
+  propertyName: string;
 }
+
+// type Lang = "zh-CN" | "en";
+
+// interface AnotherNameI18N {
+// 	[key: string]: string
+// }
 
 const DEFAULT_SETTINGS: AnotherNameSettings = {
-	propertyName: 'another-name'
-}
+  propertyName: "another-name",
+};
 
 export default class AnotherNamePlugin extends Plugin {
-	settings: AnotherNameSettings;
-	reloadForFile: (file: TFile, cache: CachedMetadata, leaf?: WorkspaceLeaf, inlineTitle?: HTMLElement) => void;
-	reloadAllVisible: () => void;
+  settings: AnotherNameSettings;
+  noticeTime: number;
+  // i18n: AnotherNameI18N;
+  reloadLeaf: (leaf: WorkspaceLeaf) => void;
+  reloadAllLeaves: () => void;
+//   translate: (key: string, lang: Lang, params?: object) => string;
 
-	async initReloadFunction() {
-		this.loadSettings();
-		this.reloadForFile = async (file: TFile, cache: CachedMetadata, leaf?: WorkspaceLeaf) => {
-			const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			let viewContentEl = leaf?.view?.contentEl as HTMLElement;
-			if (!viewContentEl)
-				viewContentEl = mdView?.contentEl as HTMLElement;
+  onload() {
+    this.loadSettings();
+	this.noticeTime = 5000;
 
-			let inlineTitle = leaf?.view.inlineTitleEl;
-			if (!inlineTitle)
-				inlineTitle = mdView?.inlineTitleEl;
+    // This adds a settings tab so the user can configure various aspects of the plugin
+    this.addSettingTab(new AnotherNameSettingTab(this.app, this));
 
-			// remove old element if exists
-			// console.log("viewContentEl", viewContentEl);
-			
-			// wait a while for the element to be rendered. At least it works!
-			let time = 0;
-			while (time < 100) {
-				const startTime = Date.now();
-				await sleep(10);
-				if (viewContentEl.querySelector(".another-name")) {
-					break;
-				}
-				const endTime = Date.now();
-				time += endTime - startTime;
-				// console.log(time);
-			}
-			
-			const anotherNameElOld = viewContentEl.querySelector(".another-name");
-			// console.log("anotherNameElOld", anotherNameElOld);
-			if (anotherNameElOld) {
-				anotherNameElOld.remove();
-				// anotherNameElOld.forEach((el: HTMLElement) => {
-				// 	el.remove();
-				// });
-			}
+	// this.translate = (key: string, lang: string, params: object) => {
+	// 	  let translation = this.i18n[lang][key];
+  
+	// 	  for (const placeholder in params) {
+	// 		translation = translation.replace(`{{${placeholder}}}`, params[placeholder]);
+	// 	  }
+		
+	// 	  return translation;
+	// };
 
-			if (!inlineTitle) return;
+    this.reloadLeaf = (leaf: WorkspaceLeaf) => {
+      const viewState = leaf.getViewState();
+      if (viewState.type === "markdown") {
+        const view = leaf.view as FileView;
+        const containerEl = view.containerEl;
 
-			// read frontmatter
-			const frontmatter = cache?.frontmatter;
+        const oldNames = containerEl.querySelectorAll(".another-name");
 
-			let anotherName;
-			if (frontmatter) {
-				anotherName = frontmatter[this.settings.propertyName]
-				if (!anotherName)
-					return;
-			} else {
-				return;
-			}
+        oldNames.forEach((v) => {
+          v.remove();
+        });
 
-			// create element
-			const anotherNameEl = document.createElement('div');
-			anotherNameEl.innerText = anotherName;
-			anotherNameEl.classList.add('another-name');
+        const inlineTitle = containerEl.querySelector(".inline-title");
+        if (!inlineTitle) {
+          return;
+        }
 
-			// insert element
-			if (inlineTitle) {
-				inlineTitle.style.marginBottom = "0px";
-				inlineTitle.parentNode?.insertBefore(anotherNameEl, inlineTitle.nextSibling);
-			}
+        const file = view.file;
+        if (!file) {
+          return;
+        }
+        const cache = this.app.metadataCache.getFileCache(file);
+        if (!cache || !cache.frontmatter) {
+          return;
+        }
 
-		}
+        const anotherNameProperty = this.settings.propertyName;
 
-		this.reloadAllVisible = () => {
-			this.app.workspace.iterateRootLeaves(leaf => {
-				const display = leaf.containerEl.style.display;
-				if (display === "none") return;
-				const file = leaf.view.file;
-				if (!file) return;
-				const cache = this.app.metadataCache.getFileCache(file);
-				if (cache) {
-					// console.log("reloadAllVisible");
-					// console.log(file, cache, leaf);
-					this.reloadForFile(file, cache, leaf);
-				}
-			});
-		};
-	}
+        const anotherName = cache.frontmatter[anotherNameProperty];
 
+        if (!anotherName) {
+          return;
+        } else if (typeof anotherName !== "string") {
+          new Notice(`Another-name: File ${file.basename} have invalid property type.`, this.noticeTime);
+        //   new Notice(this.translate("notice_1", "en"), this.noticeTime);
+          return;
+        }
+        const anotherNameEl = document.createElement("div");
+        anotherNameEl.classList.add("another-name");
+        anotherNameEl.innerText = anotherName;
 
-	async onload() {
-		await this.loadSettings();
+        inlineTitle.insertAdjacentElement("afterend", anotherNameEl);
+      }
+    };
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new AnotherNameSettingTab(this.app, this));
+    this.reloadAllLeaves = () => {
+      this.app.workspace.iterateRootLeaves(this.reloadLeaf);
+    };
 
-		this.initReloadFunction();
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file: TFile) => {
+        if (file) {
+          this.app.workspace.iterateRootLeaves((leaf: WorkspaceLeaf) => {
+            const view = leaf.view as FileView;
+            if (view.file === file) {
+              this.reloadLeaf(leaf);
+            }
+          });
+        }
+      })
+    );
 
-		let leaves = this.app.workspace.getLeavesOfType('markdown');
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        this.app.workspace.iterateRootLeaves(this.reloadLeaf);
+      })
+    );
+	
+    this.registerEvent(
+      this.app.workspace.on("codemirror", () => {
+        console.log("triggered");
+      })
+    );
+    // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
+    // Using this function will automatically remove the event listener when this plugin is disabled.
+    // this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+    // 	// console.log('click', evt);
+    // });
 
-		// this.registerEvent(this.app.workspace.on('file-open', (file: TFile) => {
-		// 	if (file) {
-		// 		const cache = this.app.metadataCache.getFileCache(file);
-		// 		if (cache) {
-		// 			console.log("file-open")
-		// 			this.reloadForFile(file, cache);
-		// 		}
-		// 	}
+    // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
+    // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+  }
 
-		// }));
+  onunload() {}
 
-		this.registerEvent(this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
-			if (file) {
-				// console.log("changed")
-				this.reloadForFile(file, cache);
-			}
-		}));
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
 
-		this.registerEvent(this.app.workspace.on('layout-change', () => {
-			// NOTE: I don't know how to make it better. At least it works!
-			// console.log("layout-change");
-			this.reloadAllVisible();
-		}));
+  async saveSettings() {
+    await this.saveData(this.settings).catch((err) => {
+      new Notice(`Another-Name: Error: Something goes wrong when saving settings. \n ${err}`, this.noticeTime);
+    //   new Notice(this.translate("error_1", "en"), this.noticeTime);
+      console.error(err);
+    });
+  }
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-		// 	// console.log('click', evt);
-		// });
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-	async updateSettings() {
-		await this.loadSettings();
-
-	}
+  updateSettings() {
+    this.loadSettings();
+  }
 }
 
 // Settings tab
 class AnotherNameSettingTab extends PluginSettingTab {
-	plugin: AnotherNamePlugin;
+  plugin: AnotherNamePlugin;
 
-	constructor(app: App, plugin: AnotherNamePlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+  constructor(app: App, plugin: AnotherNamePlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
 
-	display(): void {
-		const { containerEl } = this;
+  display(): void {
+    const { containerEl } = this;
 
-		containerEl.empty();
+    containerEl.empty();
 
-		new Setting(containerEl)
-			.setName('Property name')
-			.setDesc('After changing this setting, it would not update instantly. Try to do something to trigger the update.')
-			.addText(text => text
-				.setPlaceholder('another name')
-				.setValue(this.plugin.settings.propertyName)
-				.onChange(async (value) => {
-					this.plugin.settings.propertyName = value;
-					await this.plugin.saveSettings();
-					this.plugin.initReloadFunction();
-
-				}));
-	}
+    new Setting(containerEl)
+      .setName("Property name")
+      .setDesc("Change the property name in metadata.")
+      .addText((text) =>
+        text
+          .setPlaceholder("another name")
+          .setValue(this.plugin.settings.propertyName)
+          .onChange(async (value) => {
+            this.plugin.settings.propertyName = value;
+            await this.plugin.saveSettings();
+            await this.plugin.loadSettings();
+            this.plugin.reloadAllLeaves();
+          })
+      );
+  }
 }

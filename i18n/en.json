@@ -1,0 +1,9 @@
+{
+	"settingsName_1": "Property name",
+	"settingsDesc_1": "Change the property name in metadata.",
+	"settingsPlaceholder_1": "another-name",
+	
+	"error_1": "{{plugin-name}}: Error: Something goes wrong when saving settings.",
+
+	"notice_1": "{{plugin-name}}: File {{filename}} have invalid property type."
+}

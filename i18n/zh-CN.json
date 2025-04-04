@@ -1,0 +1,9 @@
+{
+	"settingsName_1": "属性名",
+	"settingsDesc_1": "更改属性名",
+	"settingsPlaceholder_1": "another-name",
+	
+	"error_1": "{{plugin-name}}: 错误: 保存设置时发生错误。",
+
+	"notice_1": "{{plugin-name}}: 文件 {{filename}} 的属性类型无效。"
+}

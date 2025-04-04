@@ -1,11 +1,11 @@
 {
 	"id": "another-name",
 	"name": "Another name",
-	"version": "0.1.1",
+	"version": "1.0.0",
 	"minAppVersion": "1.4.0",
 	"description": "Add a another name for your file!",
 	"author": "Wang Jiyuan",
-	"authorUrl": "",
+	"authorUrl": "https://github.com/EurFelux",
 	"fundingUrl": "",
 	"isDesktopOnly": false
 }
