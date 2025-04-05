@@ -89,9 +89,10 @@ export default class AnotherNamePlugin extends Plugin {
                     //   new Notice(this.translate("notice_1", "en"), this.noticeTime);
                     return;
                 }
-                const anotherNameEl = document.createElement("div");
-                anotherNameEl.classList.add("another-name");
-                anotherNameEl.innerText = anotherName;
+				const anotherNameEl = containerEl.createDiv({
+					cls: "another-name",
+					text: anotherName
+				})
 
                 inlineTitle.insertAdjacentElement("afterend", anotherNameEl);
             }
