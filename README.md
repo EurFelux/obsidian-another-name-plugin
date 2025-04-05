@@ -1,5 +1,7 @@
 # Another Name
 
+[简体中文](./README.zh-CN.md)
+
 This plugin provide another name under the inline title of your file.
 
 ## demo
@@ -15,7 +17,7 @@ This plugin provide another name under the inline title of your file.
 
 ## Why I develop this
 
-I'm not an English native speaker, but English is truly important for me. I learn something in my native language(Chinese) and remember its English name so that I know it when I read English paper. 
+I'm not an English native speaker, but English is truly important for me. I learn something in my native language(Chinese) and remember its English name so that I know it when I read English paper.
 
 Usually I create a note about a concept in Chinese and attach its English name after Chinese name. But I don't think that's very aesthetically pleasing, so I developed this plugin.
 
