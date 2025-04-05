@@ -1,7 +1,7 @@
 {
 	"id": "another-name",
 	"name": "Another name",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.8.9",
 	"description": "Add a another name for your file!",
 	"author": "Jiyuan Wang",
